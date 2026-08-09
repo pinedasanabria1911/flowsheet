@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Powerjacked">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 <body>
 <style>
@@ -56,7 +56,10 @@ button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-.app{max-width:560px;margin:0 auto;padding:0 14px 136px;display:flex;flex-direction:column;gap:14px}
+/* installed to the home screen the web view runs full-bleed, so the masthead sits under
+   the status bar and Dynamic Island unless it is pushed down by the safe area */
+.app{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px;
+  padding:calc(env(safe-area-inset-top) + 4px) 14px 136px}
 .stack{display:flex;flex-direction:column;gap:14px}
 
 .mast{padding:20px 2px 4px;display:flex;flex-direction:column;gap:2px}
@@ -135,8 +138,17 @@ td+td,th+th{padding-left:14px}
 input,select,textarea{background:var(--surface-2);border:1px solid var(--line);border-radius:7px;
   padding:9px 10px;font-family:var(--font-mono);font-size:.92rem;width:100%;min-width:0;
   max-width:100%;font-variant-numeric:tabular-nums}
-input[type="date"]{text-align:left}
-select{text-overflow:ellipsis}
+/* iOS gives date inputs a fixed intrinsic width that ignores width:100% and overflows
+   its grid track onto the next field. Dropping the native appearance lets it shrink. */
+input[type="date"]{-webkit-appearance:none;appearance:none;text-align:left;
+  display:block;height:40px;line-height:1.2}
+select{text-overflow:ellipsis;-webkit-appearance:none;appearance:none;height:40px;
+  padding-right:26px;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),
+    linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 15px) 17px,calc(100% - 10px) 17px;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+input[type="number"],input[type="text"],input[type="password"]{height:40px}
 @media (max-width:430px){ .form.f3{grid-template-columns:repeat(2,1fr)} }
 textarea{font-size:.82rem;line-height:1.45;resize:vertical}
 input:focus,select:focus,textarea:focus{border-color:var(--accent)}
@@ -161,7 +173,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 .setrow{display:grid;grid-template-columns:20px repeat(3,1fr) 28px;gap:6px;align-items:center}
 .setrow>*,.prow>*,.prowhead>*{min-width:0}
 .setrow .n{font-family:var(--font-mono);font-size:.68rem;color:var(--ink-3);text-align:center}
-.setrow input{padding:6px 4px;font-size:.82rem;text-align:center}
+.setrow input{padding:6px 4px;font-size:.82rem;text-align:center;height:34px}
 .setrow .lbl{text-align:center;font-size:.55rem}
 .x{background:none;border:0;color:var(--ink-3);cursor:pointer;font-family:var(--font-mono);
   font-size:.9rem;padding:4px}
@@ -173,7 +185,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 .pday>header{display:flex;gap:8px;align-items:center}
 .pday>header input{font-weight:600}
 .prow{display:grid;grid-template-columns:1fr 46px 46px 46px 26px;gap:5px;align-items:center}
-.prow input{padding:6px 6px;font-size:.78rem}
+.prow input{padding:6px 6px;font-size:.78rem;height:32px}
 .prow input.nm{text-align:left}
 .prow input.num{text-align:center}
 .prowhead{display:grid;grid-template-columns:1fr 46px 46px 46px 26px;gap:5px}
