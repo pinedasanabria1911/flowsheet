@@ -1,10 +1,10 @@
-# Flowsheet
+# Powerjacked
 
 A single-file fitness tracker. Weigh-ins with optional body composition, nutrition totals,
 a training log built around an editable program, InBody check-ins, Zone 2 and rehab
 adherence, and a dashboard that ties them together.
 
-Live at <https://pinedasanabria1911.github.io/flowsheet/>.
+Live at <https://pinedasanabria1911.github.io/powerjacked/>.
 
 ## Design constraints
 
@@ -32,9 +32,9 @@ Consequences worth knowing:
 1. Create a fine-grained personal access token at
    <https://github.com/settings/personal-access-tokens>, scoped to the private data
    repository only, with **Contents: read and write**, and an expiry you are happy with.
-2. Open the app, go to **Setup → Sync**, enter the GitHub user and the private repo name,
-   paste the token, and press **Connect**.
-3. On iOS, use Share → Add to Home Screen so it opens full screen.
+2. Open the app, go to **Setup → Sync**, enter the GitHub user and the private repo name
+   (`powerjacked-data`), paste the token, and press **Connect**.
+3. On iOS, use Share → Add to Home Screen so it opens full screen with its own icon.
 
 The token is kept in that browser's local storage under its own key, is excluded from every
 export, and is only ever sent to `api.github.com`. **Forget token** removes it from the
