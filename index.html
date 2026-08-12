@@ -1732,6 +1732,11 @@ function renderSync(){
     : "";
 }
 
+// everything that matters for equality, excluding the write timestamp
+function fingerprint(o){
+  return JSON.stringify([o.program, o.settings, o.weighins, o.nutrition,
+    o.workouts, o.rehab, o.bodycomp]);
+}
 function stateForSync(){
   return {program:S.program, settings:S.settings, weighins:S.weighins, nutrition:S.nutrition,
     workouts:S.workouts, rehab:S.rehab, bodycomp:S.bodycomp,
@@ -1781,6 +1786,14 @@ async function pullNow(){
     sync.sha = remote.sha;
     saveLocal(); renderAll();
     sync.lastAt = new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+    // a device connecting for the first time usually carries entries the repo has never
+    // seen; the merge keeps them, so send them up rather than waiting for the next save
+    if(fingerprint(S) !== fingerprint(remote.data)){
+      sync.busy = false;
+      const sent = await pushNow(true);
+      toast(sent ? "Merged, and this device's entries pushed" : "Pulled, push pending");
+      return;
+    }
     toast("Pulled from GitHub");
   }catch(e){
     sync.lastError = e.message; toast(e.message);
