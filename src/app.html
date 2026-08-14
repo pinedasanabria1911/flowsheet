@@ -2084,7 +2084,9 @@ function buildSummary(){
       basis_days: m.win
     } : {calorie_target_kcal: kt.kcal, basis: "fallback, under 14 days of paired data"},
     training_last_7_days: {
-      sessions_completed: w7.map(w=>w.day),
+      // lifting only, to match the dashboard tile and the session floor; cardio and
+      // mobility are reported in their own fields below rather than counted as training
+      sessions_completed: w7.filter(w=>dayKind(w.day)==="lift").map(w=>w.day),
       volume_audit: audit,
       volume_audit_note: "sets logged in 7 days vs sets your program prescribes per week; a set counts toward every muscle group its exercise lists",
       top_lift_progressions: topLiftProgressions(7, 4),
@@ -2141,7 +2143,7 @@ function summaryMarkdown(){
     + j.nutrition_last_7_days.adherence_days_logged + "/7 days");
   L.push("");
   L.push("## Training, last 7 days");
-  L.push("- Sessions: " + (j.training_last_7_days.sessions_completed.join(", ") || "none"));
+  L.push("- Lifting sessions: " + (j.training_last_7_days.sessions_completed.join(", ") || "none"));
   if(j.training_last_7_days.zone2_minutes) L.push("- Zone 2: " + j.training_last_7_days.zone2_minutes + " min");
   j.training_last_7_days.cardio_sessions.forEach(c=> L.push("- Cardio " + c.date + ": "
     + c.zone2_min + " min" + (c.avg_hr ? ", HR " + c.avg_hr + " avg" : "")
