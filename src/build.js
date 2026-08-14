@@ -8,11 +8,14 @@ const dir = __dirname;
 const demoDir = path.join(dir, 'dist');
 fs.mkdirSync(demoDir, {recursive: true});
 
-const shell = fs.readFileSync(path.join(dir, 'app.html'), 'utf8');
+// Normalise line endings on read. A CRLF checkout would make the "\n"-anchored
+// substitutions below miss silently and ship the demo banner in the production page.
+const lf = s => s.replace(/\r\n/g, '\n');
+const shell = lf(fs.readFileSync(path.join(dir, 'app.html'), 'utf8'));
 if (!shell.includes('// <<<SEED>>>')) throw new Error('seed marker missing');
 
 // --- prototype -------------------------------------------------------------
-const demo = fs.readFileSync(path.join(dir, 'seed.demo.js'), 'utf8').trim();
+const demo = lf(fs.readFileSync(path.join(dir, 'seed.demo.js'), 'utf8')).trim();
 fs.writeFileSync(path.join(demoDir, 'demo.html'), shell.replace('// <<<SEED>>>', demo));
 
 // --- production ------------------------------------------------------------

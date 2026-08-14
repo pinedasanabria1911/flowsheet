@@ -1,0 +1,5 @@
+# Keep LF in the working tree on every platform. The build matches on "\n", so a CRLF
+# checkout on Windows silently skips substitutions and ships the wrong page.
+* text=auto eol=lf
+
+*.png binary
