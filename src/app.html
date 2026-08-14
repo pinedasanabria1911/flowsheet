@@ -108,6 +108,7 @@ th:first-child,td:first-child{text-align:left}
 td{font-family:var(--font-mono);font-size:.8rem;text-align:right;padding:6px 0;
   border-top:1px solid var(--line);white-space:nowrap}
 td+td,th+th{padding-left:14px}
+td.det{text-align:left;color:var(--ink-3);font-size:.72rem}
 
 .form{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
 .form.f3{grid-template-columns:repeat(3,1fr)}
@@ -419,13 +420,27 @@ nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent
           <div class="f"><label for="tDate">Date</label><input type="date" id="tDate"></div>
           <div class="f"><label for="tDay">Session</label><select id="tDay"></select></div>
         </div>
-        <p class="hint"><b>Superset</b> pairs an exercise with the one above it for this
-          session only; the program is untouched. To pair them in every session, do it in
-          Setup → Program. <b>1RM</b> estimates a one-rep max from what you have logged.</p>
-        <div class="exlist" id="exList"></div>
-        <div class="form">
-          <div class="f"><label for="tZone2">Zone 2 bike (min, after weights)</label>
+        <div id="liftPane">
+          <p class="hint"><b>Superset</b> pairs an exercise with the one above it for this
+            session only; the program is untouched. To pair them in every session, do it in
+            Setup → Program. <b>1RM</b> estimates a one-rep max from what you have logged.</p>
+          <div class="exlist" id="exList"></div>
+        </div>
+        <div id="mobPane" class="hidden">
+          <p class="hint">A mobility day carries no load, so it is logged by what you worked
+            on. Pick either, or both.</p>
+          <div class="checks">
+            <label class="chk" id="chkLower"><input type="checkbox" id="mobLower">Lower body</label>
+            <label class="chk" id="chkUpper"><input type="checkbox" id="mobUpper">Upper body</label>
+          </div>
+        </div>
+        <div class="form" id="z2Pane">
+          <div class="f"><label for="tZone2" id="tZone2Lbl">Zone 2 bike (min, after weights)</label>
             <input type="number" id="tZone2" inputmode="numeric" placeholder="0"></div>
+          <div class="f"><label for="tHrAvg">Average HR (bpm)</label>
+            <input type="number" id="tHrAvg" inputmode="numeric" placeholder="—"></div>
+          <div class="f"><label for="tHrMax">Max HR (bpm)</label>
+            <input type="number" id="tHrMax" inputmode="numeric" placeholder="—"></div>
           <div class="f" style="justify-content:flex-end">
             <p class="hint" id="z2Warn"></p></div>
         </div>
@@ -607,7 +622,7 @@ nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent
       <div class="card">
         <header><span class="lbl">Full history</span><span class="note">tier 2</span></header>
         <p class="hint">Every row, one CSV per table, bundled as a ZIP: weigh-ins, training sets,
-          nutrition, InBody check-ins, cardio, rehab. Pull this when the question needs the raw
+          nutrition, InBody check-ins, cardio, mobility, rehab. Pull this when the question needs the raw
           series, like whether a lift has actually stalled over eight weeks.</p>
         <div class="btnrow">
           <button class="btn" id="expZip" type="button">Full history · ZIP</button>
@@ -726,7 +741,22 @@ function el(tag, attrs, text){
   if(text!=null) e.textContent = text;
   return e;
 }
-const dayDef = id => S.program.find(d=>d.id===id);
+/* Two sessions that are not lifting and not part of the program, so they are fixtures
+   of the app rather than rows the program editor can rename or delete. */
+const EXTRA_DAYS = [
+  {id:"Z2",  name:"Zone 2 cardio", kind:"cardio"},
+  {id:"MOB", name:"Mobility",      kind:"mobility"},
+];
+const dayDef = id => S.program.find(d=>d.id===id) || EXTRA_DAYS.find(d=>d.id===id);
+// a program day always wins the id, so a collision costs the fixture, never the program
+const dayKind = id => S.program.some(d=>d.id===id) ? "lift"
+  : (EXTRA_DAYS.find(d=>d.id===id) || {}).kind || "lift";
+function mobilityText(w){
+  const p = [];
+  if(w.mobility && w.mobility.lower) p.push("lower");
+  if(w.mobility && w.mobility.upper) p.push("upper");
+  return p.length ? p.join(" + ") + " body" : "nothing marked";
+}
 
 /* ---------- supersets ----------
    An exercise carries ss:true when it is done back to back with the one above it,
@@ -950,7 +980,12 @@ function renderOverview(){
   const protHit = n7.filter(d=>d.protein_g >= pt).length;
 
   const t0 = shiftDays(todayISO(), -6);
-  const w7 = S.workouts.filter(w=>w.date >= t0);
+  // the floor and target are about lifting; cardio and mobility are counted beside it
+  const all7 = S.workouts.filter(w=>w.date >= t0);
+  const w7 = all7.filter(w=>dayKind(w.day) === "lift");
+  const extra7 = [["cardio","cardio"],["mobility","mobility"]]
+    .map(([k,lbl])=>{ const n = all7.filter(w=>dayKind(w.day)===k).length;
+      return n ? "+"+n+" "+lbl : ""; }).filter(Boolean).join(", ");
 
   const rateTxt = isNaN(rate) ? "–" : (rate<0 ? "" : "+") + n1(rate);
   const tiles = [
@@ -962,8 +997,9 @@ function renderOverview(){
      d:protHit+"/"+n7.length+" days on target",
      dc: protHit>=5 ? "c-good" : "c-warn", st: protHit>=5 ? "s-good" : "s-warn"},
     {lbl:"Sessions 7d", v:String(w7.length), u:"floor "+s.sessionFloor+" · aim "+s.sessionTarget,
-     d: w7.length>=s.sessionTarget ? "target met"
-        : w7.length>=s.sessionFloor ? "floor met" : "below floor",
+     d: (w7.length>=s.sessionTarget ? "target met"
+        : w7.length>=s.sessionFloor ? "floor met" : "below floor")
+        + (extra7 ? " · " + extra7 : ""),
      dc: w7.length>=s.sessionTarget ? "c-good" : w7.length>=s.sessionFloor ? "c-warn" : "c-crit",
      st: w7.length>=s.sessionTarget ? "s-good" : w7.length>=s.sessionFloor ? "s-warn" : "s-crit"}
   ];
@@ -1116,19 +1152,36 @@ function buildDraft(dayId, prefill){
 }
 function renderDaySelect(){
   const sel = document.getElementById("tDay"), keep = sel.value;
-  sel.innerHTML = S.program.map(d=>`<option value="${esc(d.id)}">${esc(d.id)} · ${esc(d.name)}</option>`).join("");
-  if(S.program.some(d=>d.id===keep)) sel.value = keep;
+  const opt = d => `<option value="${esc(d.id)}">${esc(d.id)} · ${esc(d.name)}</option>`;
+  const extra = EXTRA_DAYS.filter(x=> !S.program.some(d=>d.id===x.id));
+  sel.innerHTML = S.program.map(opt).join("")
+    + (extra.length ? `<optgroup label="Not lifting">${extra.map(opt).join("")}</optgroup>` : "");
+  if(S.program.some(d=>d.id===keep) || extra.some(d=>d.id===keep)) sel.value = keep;
 }
 function renderTraining(){
   renderDaySelect();
   const dayId = document.getElementById("tDay").value;
+  renderSessionHistory();
   if(!dayId){ document.getElementById("exList").innerHTML = ""; return; }
-  if(!draft || draft.day !== dayId) draft = buildDraft(dayId, false);
-  const prev = lastSessionFor(dayId), def = dayDef(dayId);
-  document.getElementById("tLast").textContent = prev ? "last "+def.name+": "+fmtDate(prev.date) : "no history";
-  document.getElementById("z2Warn").textContent =
-    (dayId === "A" || dayId === "C") ? "Heavy lower-body day. Zone 2 is not paired with this session." : "";
+  const kind = dayKind(dayId), lift = kind === "lift";
+  // the form is one card that changes shape: sets to log, or minutes, or what you mobilised
+  document.getElementById("liftPane").classList.toggle("hidden", !lift);
+  document.getElementById("mobPane").classList.toggle("hidden", kind !== "mobility");
+  document.getElementById("z2Pane").classList.toggle("hidden", kind === "mobility");
+  ["tPrefill","tClear"].forEach(id=>
+    document.getElementById(id).classList.toggle("hidden", !lift));
+  document.getElementById("tZone2Lbl").textContent =
+    lift ? "Zone 2 bike (min, after weights)" : "Zone 2 bike (min)";
 
+  const prev = lastSessionFor(dayId), def = dayDef(dayId);
+  document.getElementById("tLast").textContent =
+    prev ? "last "+def.name+": "+fmtDate(prev.date) : "no history";
+  document.getElementById("z2Warn").textContent = !lift ? ""
+    : (dayId === "A" || dayId === "C")
+      ? "Heavy lower-body day. Zone 2 is not paired with this session." : "";
+  if(!lift){ document.getElementById("exList").innerHTML = ""; draft = null; return; }
+
+  if(!draft || draft.day !== dayId) draft = buildDraft(dayId, false);
   const groups = ssGroups(draft.ex);
   const card = (ei, ord) => {
     const e = draft.ex[ei];
@@ -1167,12 +1220,21 @@ function renderTraining(){
       ${own ? `<span class="only">this session only</span>` : ""}</div>${inner}</div>`;
   }).join("");
 
+}
+// cardio and mobility rows have no sets to report, so they say what they were instead
+function renderSessionHistory(){
   document.getElementById("tCount").textContent = S.workouts.length + " sessions";
   document.getElementById("tRows").innerHTML = S.workouts.slice(-25).reverse().map(w=>{
+    const z2 = w.zone2 ? w.zone2+"′" + (w.hrAvg||w.hrMax
+      ? " · " + (w.hrAvg||"–") + "/" + (w.hrMax||"–") : "") : "–";
+    const kind = dayKind(w.day);
+    if(kind !== "lift") return `<tr><td>${fmtDate(w.date)}</td><td>${esc(w.day)}</td>
+      <td class="det" colspan="3">${esc(kind === "mobility" ? mobilityText(w) : "Zone 2 cardio")}</td>
+      <td>${z2}</td></tr>`;
     const rpes = w.exercises.flatMap(e=>e.sets.map(s=>s.rpe)).filter(v=>v);
     return `<tr><td>${fmtDate(w.date)}</td><td>${esc(w.day)}</td><td>${setCount(w)}</td>
       <td>${n0(tonnage(w))}</td><td>${n1(mean(rpes))}</td>
-      <td>${w.zone2 ? w.zone2+"′" : "–"}</td></tr>`;
+      <td>${z2}</td></tr>`;
   }).join("");
 }
 
@@ -1539,11 +1601,15 @@ document.getElementById("cSave").addEventListener("click", ()=>{
 /* ---------- session logger ---------- */
 document.getElementById("tDay").addEventListener("change", ()=>{ draft = null; renderTraining(); });
 document.getElementById("tPrefill").addEventListener("click", ()=>{
-  draft = buildDraft(document.getElementById("tDay").value, true);
+  const day = document.getElementById("tDay").value;
+  if(dayKind(day) !== "lift") return;   // nothing to prefill on a cardio or mobility day
+  draft = buildDraft(day, true);
   renderTraining(); toast("Prefilled from last session");
 });
 document.getElementById("tClear").addEventListener("click", ()=>{
-  draft = buildDraft(document.getElementById("tDay").value, false); renderTraining();
+  const day = document.getElementById("tDay").value;
+  if(dayKind(day) !== "lift") return;
+  draft = buildDraft(day, false); renderTraining();
 });
 document.getElementById("exList").addEventListener("input", e=>{
   const t = e.target; if(!t.dataset.k) return;
@@ -1563,23 +1629,53 @@ document.getElementById("exList").addEventListener("click", e=>{
     x.ss = !x.ss; renderTraining();
     toast(x.ss ? "Superset for this session" : "Superset broken for this session"); }
 });
+// the mobility chips light up like the rehab ones
+["mobLower","mobUpper"].forEach(id=>
+  document.getElementById(id).addEventListener("change", e=>
+    e.target.closest(".chk").classList.toggle("on", e.target.checked)));
+
 document.getElementById("tSave").addEventListener("click", ()=>{
   const date = document.getElementById("tDate").value, day = document.getElementById("tDay").value;
-  // an exercise dropped for having no sets takes its pairing with it, and whoever
-  // is left at the top of the list has nothing above it to be supersetted with
-  const exercises = ssNormalize(draft.ex.map(e=>{
-      const rec = {name:e.def.name,
-        sets:e.sets.map(s=>({reps:parseInt(s.reps)||0, kg:parseFloat(s.kg)||0, rpe:parseFloat(s.rpe)||0}))
-          .filter(s=>s.reps > 0)};
-      if(e.ss) rec.ss = true;
-      return rec;
-    }).filter(e=>e.sets.length));
-  if(!exercises.length){ toast("Log at least one set"); return; }
+  if(!date){ toast("Pick a date"); return; }
+  const kind = dayKind(day);
   const z2 = parseInt(document.getElementById("tZone2").value) || 0;
+  const hrAvg = parseInt(document.getElementById("tHrAvg").value) || 0;
+  const hrMax = parseInt(document.getElementById("tHrMax").value) || 0;
+  let rec;
+  if(kind === "mobility"){
+    const lower = document.getElementById("mobLower").checked;
+    const upper = document.getElementById("mobUpper").checked;
+    if(!lower && !upper){ toast("Pick lower body, upper body, or both"); return; }
+    rec = {date, day, zone2:0, exercises:[], mobility:{lower, upper}};
+  } else {
+    if(hrMax && hrAvg && hrMax < hrAvg){ toast("Max HR is below the average"); return; }
+    if(kind === "cardio"){
+      if(!z2){ toast("Enter the minutes"); return; }
+      rec = {date, day, zone2:z2, exercises:[]};
+    } else {
+      // an exercise dropped for having no sets takes its pairing with it, and whoever
+      // is left at the top of the list has nothing above it to be supersetted with
+      const exercises = ssNormalize(draft.ex.map(e=>{
+          const r = {name:e.def.name,
+            sets:e.sets.map(s=>({reps:parseInt(s.reps)||0, kg:parseFloat(s.kg)||0, rpe:parseFloat(s.rpe)||0}))
+              .filter(s=>s.reps > 0)};
+          if(e.ss) r.ss = true;
+          return r;
+        }).filter(e=>e.sets.length));
+      if(!exercises.length){ toast("Log at least one set"); return; }
+      rec = {date, day, zone2:z2, exercises};
+    }
+    if(hrAvg) rec.hrAvg = hrAvg;
+    if(hrMax) rec.hrMax = hrMax;
+  }
   S.workouts = S.workouts.filter(w=>!(w.date===date && w.day===day));
-  S.workouts.push({date, day, zone2:z2, exercises});
-  save(); draft = null; document.getElementById("tZone2").value = "";
-  renderAll(); toast("Session saved");
+  S.workouts.push(rec);
+  save(); draft = null;
+  ["tZone2","tHrAvg","tHrMax"].forEach(i=> document.getElementById(i).value = "");
+  ["mobLower","mobUpper"].forEach(i=>{ const c = document.getElementById(i);
+    c.checked = false; c.closest(".chk").classList.remove("on"); });
+  renderAll();
+  toast(kind === "cardio" ? "Zone 2 saved" : kind === "mobility" ? "Mobility saved" : "Session saved");
 });
 
 /* ---------- rehab ---------- */
@@ -1665,6 +1761,9 @@ document.getElementById("pSave").addEventListener("click", ()=>{
   const ids = S.program.map(d=>d.id.trim());
   if(ids.some(x=>!x)){ toast("Every session needs a code"); return; }
   if(new Set(ids).size !== ids.length){ toast("Session codes must be unique"); return; }
+  const taken = EXTRA_DAYS.map(d=>d.id);
+  if(ids.some(x=> taken.includes(x.toUpperCase()))){
+    toast(taken.join(" and ") + " are the cardio and mobility sessions"); return; }
   S.program.forEach(d=>{ d.id = d.id.trim(); ssNormalize(d.ex);
     d.ex.forEach(x=>{ if(x.hi < x.lo) x.hi = x.lo; x.sets = Math.max(1, Math.round(x.sets)); }); });
   draft = null;
@@ -1989,7 +2088,11 @@ function buildSummary(){
       volume_audit: audit,
       volume_audit_note: "sets logged in 7 days vs sets your program prescribes per week; a set counts toward every muscle group its exercise lists",
       top_lift_progressions: topLiftProgressions(7, 4),
-      zone2_minutes: w7.reduce((a,w)=>a+(w.zone2||0), 0)
+      zone2_minutes: w7.reduce((a,w)=>a+(w.zone2||0), 0),
+      cardio_sessions: w7.filter(w=>dayKind(w.day)==="cardio").map(w=>({
+        date:w.date, zone2_min:w.zone2||0, avg_hr:w.hrAvg ?? null, max_hr:w.hrMax ?? null})),
+      mobility_sessions: w7.filter(w=>dayKind(w.day)==="mobility").map(w=>({
+        date:w.date, lower_body:!!(w.mobility||{}).lower, upper_body:!!(w.mobility||{}).upper}))
     },
     nutrition_last_7_days: {
       avg_kcal: n7.length ? Math.round(mean(n7.map(d=>d.kcal))) : null,
@@ -2040,6 +2143,11 @@ function summaryMarkdown(){
   L.push("## Training, last 7 days");
   L.push("- Sessions: " + (j.training_last_7_days.sessions_completed.join(", ") || "none"));
   if(j.training_last_7_days.zone2_minutes) L.push("- Zone 2: " + j.training_last_7_days.zone2_minutes + " min");
+  j.training_last_7_days.cardio_sessions.forEach(c=> L.push("- Cardio " + c.date + ": "
+    + c.zone2_min + " min" + (c.avg_hr ? ", HR " + c.avg_hr + " avg" : "")
+    + (c.max_hr ? " / " + c.max_hr + " max" : "")));
+  j.training_last_7_days.mobility_sessions.forEach(m=> L.push("- Mobility " + m.date + ": "
+    + [m.lower_body ? "lower" : "", m.upper_body ? "upper" : ""].filter(Boolean).join(" + ") + " body"));
   L.push("");
   L.push("| Muscle group | Sets | Weekly target |");
   L.push("|---|---|---|");
@@ -2097,8 +2205,13 @@ function exportTables(){
     ["date","weight_kg","bf_pct","smm_kg"],
     S.bodycomp.map(d=>[d.date, d.weight_kg, d.bf_pct, d.smm_kg]))});
   t.push({name:"cardio.csv", text: csv(
-    ["date","session","zone2_min"],
-    S.workouts.filter(w=>w.zone2).map(w=>[w.date, w.day, w.zone2]))});
+    ["date","session","zone2_min","avg_hr","max_hr"],
+    S.workouts.filter(w=>w.zone2 || w.hrAvg || w.hrMax)
+      .map(w=>[w.date, w.day, w.zone2||0, w.hrAvg ?? "", w.hrMax ?? ""]))});
+  t.push({name:"mobility.csv", text: csv(
+    ["date","session","lower_body","upper_body"],
+    S.workouts.filter(w=>w.mobility)
+      .map(w=>[w.date, w.day, w.mobility.lower?1:0, w.mobility.upper?1:0]))});
   t.push({name:"rehab.csv", text: csv(
     ["date","am","pm"],
     S.rehab.map(d=>[d.date, d.am?1:0, d.pm?1:0]))});
@@ -2209,7 +2322,7 @@ document.getElementById("expZip").addEventListener("click", ()=>{
   const zip = makeZip(exportTables());
   saveFile("powerjacked-history-" + stamp() + ".zip", zip, "application/zip", ()=>{
     document.getElementById("zipNote").textContent =
-      "This viewer does not accept .zip files. Sending the same six tables as a single "
+      "This viewer does not accept .zip files. Sending the same tables as a single "
       + "Markdown file instead; on your own site the ZIP downloads normally.";
     saveFile("powerjacked-history-" + stamp() + ".md", markdownBundle(), "text/markdown");
   });

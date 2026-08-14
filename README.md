@@ -63,6 +63,19 @@ The token is kept in that browser's local storage under its own key, is excluded
 export, and is only ever sent to `api.github.com`. **Forget token** removes it from the
 device.
 
+## Session types
+
+The session picker carries the program's own days plus two fixtures that are not lifting
+and are not editable in the program:
+
+- **Z2, Zone 2 cardio.** Minutes, average HR and max HR. No sets, no exercises.
+- **MOB, Mobility.** Lower body, upper body, or both.
+
+Average and max HR sit on a lifting session too, next to the Zone 2 minutes you ride after
+weights, so a bike block logged either way records the same three numbers. Cardio and
+mobility days do not count toward the weekly session floor, which is about lifting; the
+dashboard tile reports them beside it. They export as `cardio.csv` and `mobility.csv`.
+
 ## Supersets
 
 An exercise can be paired with the one above it, and a run of paired exercises is one
