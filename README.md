@@ -1,8 +1,8 @@
 # Powerjacked
 
 A single-file fitness tracker. Weigh-ins with optional body composition, nutrition totals,
-a training log built around an editable program, InBody check-ins, Zone 2 and rehab
-adherence, and a dashboard that ties them together.
+a training log built around an editable program, estimated one-rep maxes per exercise,
+InBody check-ins, Zone 2 and rehab adherence, and a dashboard that ties them together.
 
 Live at <https://pinedasanabria1911.github.io/powerjacked/>.
 
@@ -62,6 +62,28 @@ Consequences worth knowing:
 The token is kept in that browser's local storage under its own key, is excluded from every
 export, and is only ever sent to `api.github.com`. **Forget token** removes it from the
 device.
+
+## Supersets
+
+An exercise can be paired with the one above it, and a run of paired exercises is one
+superset, numbered `1a`, `1b`, `1c` in the log and in the training CSV.
+
+- **In Setup → Program**, the pairing is part of the program: every session logged from
+  then on starts with it.
+- **In the session logger**, the pairing is that session's own. It is saved with the
+  workout, the program keeps whatever it had, and the block is marked *this session only*
+  while it differs from the program.
+
+## Estimated 1RM
+
+Every exercise in the logger has a **1RM** button, and **Maxes** lists one estimate per
+exercise grouped by main muscle group, strongest first. Both read the same four windows:
+the last session with that exercise, all history, 3 months, 6 months.
+
+The estimate is Epley, `1RM = w · (1 + reps/30)`, taken from the best set in the window and
+inverted to give the load each rep count should take. Sets past 12 reps are ignored, since
+that is past where the formula holds. Sets typed into the open session count before they
+are saved, so the number moves while you train. It is an estimate, not a tested max.
 
 ## Exports
 

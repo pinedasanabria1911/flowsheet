@@ -160,6 +160,27 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 .x{background:none;border:0;color:var(--ink-3);cursor:pointer;font-family:var(--font-mono);
   font-size:.9rem;padding:4px}
 .x:hover{color:var(--crit)}
+/* one exercise's estimate; the number is the point, so it never scrolls out of reach */
+.mxrows{display:flex;flex-direction:column}
+.mxrow{display:flex;width:100%;gap:12px;justify-content:space-between;align-items:baseline;
+  background:none;border:0;border-top:1px solid var(--line);color:inherit;text-align:left;
+  padding:10px 0;cursor:pointer;font:inherit}
+.mxrow:first-child{border-top:0}
+.mxrow .nm{display:block;font-size:.85rem}
+.mxrow .from{display:block;margin-top:3px;font-family:var(--font-mono);font-size:.63rem;
+  color:var(--ink-3)}
+.mxrow .val{font-family:var(--font-mono);font-size:1.05rem;white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.mxrow .val i{font-style:normal;font-size:.6rem;color:var(--ink-3)}
+.mxrow:hover .nm,.mxrow:hover .val{color:var(--accent)}
+
+/* supersets: a run of exercises done back to back, drawn as one block */
+.ssgroup{border:1px solid var(--accent);border-radius:var(--r);background:var(--accent-soft);
+  padding:8px;display:flex;flex-direction:column;gap:8px}
+.sstag{display:flex;justify-content:space-between;gap:8px;font-family:var(--font-mono);
+  font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.sstag .only{color:var(--ink-3);letter-spacing:.06em;text-transform:none}
+.ssgroup .ex{background:var(--surface)}
 
 /* program editor */
 .pday{border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);padding:11px;
@@ -174,6 +195,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 .prowhead .lbl{font-size:.53rem;text-align:center}
 .prowhead .lbl:first-child{text-align:left}
 .moves{display:flex;gap:2px}
+/* the superset toggle needs more room than one 46px track */
+.sslink{grid-column:4/-1;justify-self:start}
 .warnbox{border-left:3px solid var(--crit);background:var(--surface-2);padding:8px 10px;
   border-radius:6px;font-size:.78rem;color:var(--ink-2)}
 .checks{display:flex;gap:8px;flex-wrap:wrap}
@@ -185,7 +208,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent)}
 
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;
   padding:0 10px calc(10px + env(safe-area-inset-bottom));pointer-events:none;z-index:5}
-nav .inner{pointer-events:auto;display:grid;grid-template-columns:repeat(6,1fr);gap:1px;
+nav .inner{pointer-events:auto;display:grid;grid-template-columns:repeat(7,1fr);gap:1px;
   width:100%;max-width:560px;background:var(--surface);border:1px solid var(--line);
   border-radius:14px;padding:5px;box-shadow:0 6px 24px rgba(0,0,0,.13)}
 nav button{background:none;border:0;padding:8px 1px;border-radius:10px;cursor:pointer;
@@ -194,6 +217,26 @@ nav button{background:none;border:0;padding:8px 1px;border-radius:10px;cursor:po
 nav button svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round}
 nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent)}
+
+/* 1RM sheet */
+.modal{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
+  padding:16px;background:rgba(0,0,0,.5);overflow:auto}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px;width:100%;max-width:420px;max-height:88vh;overflow:auto;
+  display:flex;flex-direction:column;gap:11px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.sheet>header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.sheet .mtitle{font-size:1rem;font-weight:600;line-height:1.3}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--surface-2);
+  border:1px solid var(--line);border-radius:9px;padding:3px}
+.tab{background:none;border:0;border-radius:7px;padding:8px 2px;cursor:pointer;
+  font-family:var(--font-mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-3)}
+.tab[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+.rmbig{font-family:var(--font-mono);font-size:1.5rem;line-height:1.1}
+.rmbig span{font-size:.8rem;color:var(--ink-3)}
+.rmfrom{font-family:var(--font-mono);font-size:.66rem;color:var(--ink-3);margin-top:4px}
+.rmtable td:last-child{color:var(--ink-3)}
+.rmtable tr.top td{color:var(--accent)}
 
 .hidden{display:none}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:100px;background:var(--ink);
@@ -376,6 +419,9 @@ nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent
           <div class="f"><label for="tDate">Date</label><input type="date" id="tDate"></div>
           <div class="f"><label for="tDay">Session</label><select id="tDay"></select></div>
         </div>
+        <p class="hint"><b>Superset</b> pairs an exercise with the one above it for this
+          session only; the program is untouched. To pair them in every session, do it in
+          Setup → Program. <b>1RM</b> estimates a one-rep max from what you have logged.</p>
         <div class="exlist" id="exList"></div>
         <div class="form">
           <div class="f"><label for="tZone2">Zone 2 bike (min, after weights)</label>
@@ -398,6 +444,25 @@ nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent
           </table>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ MAXES ============ -->
+  <section id="v-maxes" class="hidden">
+    <div class="stack">
+      <div class="card">
+        <header><span class="lbl">Estimated 1RM</span><span class="note" id="mxCount"></span></header>
+        <p class="hint">Every exercise you have logged, by main muscle group, strongest first.
+          Tap one for its full rep chart.</p>
+        <div class="tabs" id="mxTabs" role="tablist" aria-label="Window">
+          <button class="tab" type="button" role="tab" data-mxtab="current">Current</button>
+          <button class="tab" type="button" role="tab" data-mxtab="lifetime">Lifetime</button>
+          <button class="tab" type="button" role="tab" data-mxtab="3m">3M</button>
+          <button class="tab" type="button" role="tab" data-mxtab="6m">6M</button>
+        </div>
+        <p class="hint" id="mxNote"></p>
+      </div>
+      <div class="stack" id="mxList"></div>
     </div>
   </section>
 
@@ -492,7 +557,9 @@ nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent
       <div class="card">
         <header><span class="lbl">Program</span><span class="note">order is training order</span></header>
         <p class="hint">Sets is the planned count. Low and high are the rep range the progression
-          rule reads. Step is the load jump to take once the range is maxed out.</p>
+          rule reads. Step is the load jump to take once the range is maxed out.
+          <b>Superset</b> pairs an exercise with the one above it, and every session logged
+          from then on starts with that pairing.</p>
         <div class="stack" id="progEdit"></div>
         <div class="btnrow">
           <button class="btn" id="pSave" type="button">Save program</button>
@@ -573,12 +640,32 @@ nav button[aria-current="true"]{background:var(--accent-soft);color:var(--accent
       <svg viewBox="0 0 24 24"><path d="M7 3v8a3 3 0 006 0V3"/><path d="M10 11v10"/><path d="M17 3c-2 3-2 6 0 8v10"/></svg>Fuel</button>
     <button type="button" data-view="training">
       <svg viewBox="0 0 24 24"><path d="M4 9v6M8 7v10M16 7v10M20 9v6M8 12h8"/></svg>Lift</button>
+    <button type="button" data-view="maxes">
+      <svg viewBox="0 0 24 24"><path d="M12 4l4 5h-3v6h-2V9H8z"/><path d="M4 20h16"/></svg>Maxes</button>
     <button type="button" data-view="comp">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="3"/><path d="M6 21v-4a6 6 0 0112 0v4"/></svg>Body</button>
     <button type="button" data-view="setup">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>Setup</button>
   </div>
 </nav>
+
+<div class="modal hidden" id="rmModal" role="dialog" aria-modal="true" aria-labelledby="rmTitle">
+  <div class="sheet">
+    <header>
+      <span class="mtitle" id="rmTitle">1RM calculator</span>
+      <button class="x" id="rmClose" type="button" aria-label="Close">✕</button>
+    </header>
+    <div class="tabs" id="rmTabs" role="tablist" aria-label="Window">
+      <button class="tab" type="button" role="tab" data-rmtab="current">Current</button>
+      <button class="tab" type="button" role="tab" data-rmtab="lifetime">Lifetime</button>
+      <button class="tab" type="button" role="tab" data-rmtab="3m">3M</button>
+      <button class="tab" type="button" role="tab" data-rmtab="6m">6M</button>
+    </div>
+    <div id="rmBody"></div>
+    <div class="btnrow"><button class="btn" id="rmOk" type="button" style="flex:1">Got it</button></div>
+    <p class="hint" id="rmNote"></p>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -640,6 +727,21 @@ function el(tag, attrs, text){
   return e;
 }
 const dayDef = id => S.program.find(d=>d.id===id);
+
+/* ---------- supersets ----------
+   An exercise carries ss:true when it is done back to back with the one above it,
+   so a run of flagged exercises plus its leader is one superset. The flag lives on
+   the program entry (every future session) and on the session draft and the saved
+   workout (that session only), which is why both editors share this grouping. */
+function ssGroups(list){
+  const out = [];
+  list.forEach((x,i)=>{ if(i && x.ss && out.length) out[out.length-1].push(i); else out.push([i]); });
+  return out;
+}
+// 3rd exercise standing alone is "3"; a pair is "3a" and "3b"
+const ordLabel = (gi, k, size) => size > 1 ? (gi+1) + "abcdefgh".charAt(k) : String(gi+1);
+// the first exercise of a list has nothing above it to pair with
+function ssNormalize(list){ if(list.length) delete list[0].ss; return list; }
 
 /* ---------- goal model ---------- */
 function goalMid(){ return (S.settings.goalLo + S.settings.goalHi)/2; }
@@ -1004,12 +1106,13 @@ function renderNutrition(){
 let draft = null;
 function buildDraft(dayId, prefill){
   const def = dayDef(dayId), prev = lastSessionFor(dayId);
-  return {day:dayId, ex: def.ex.map(x=>{
+  return {day:dayId, ex: ssNormalize(def.ex.map(x=>{
     const p = prev ? prev.exercises.find(e=>e.name===x.name) : null;
     const sets = (prefill && p) ? p.sets.map(s=>({reps:s.reps, kg:s.kg, rpe:s.rpe}))
       : Array.from({length:x.sets}, ()=>({reps:"",kg:"",rpe:""}));
-    return {def:x, prev:p, sets};
-  })};
+    // the program's pairing is the starting point; the session can depart from it
+    return {def:x, prev:p, sets, ss:!!x.ss};
+  }))};
 }
 function renderDaySelect(){
   const sel = document.getElementById("tDay"), keep = sel.value;
@@ -1026,11 +1129,13 @@ function renderTraining(){
   document.getElementById("z2Warn").textContent =
     (dayId === "A" || dayId === "C") ? "Heavy lower-body day. Zone 2 is not paired with this session." : "";
 
-  document.getElementById("exList").innerHTML = draft.ex.map((e,ei)=>{
+  const groups = ssGroups(draft.ex);
+  const card = (ei, ord) => {
+    const e = draft.ex[ei];
     const pv = e.prev ? e.prev.sets.map(s=>`${s.reps}×${s.kg||"BW"}`).join("  ") : "no prior data";
     const range = e.def.lo === e.def.hi ? e.def.lo : e.def.lo+"–"+e.def.hi;
     return `<div class="ex">
-      <header><span class="nm"><span class="ord">${ei+1}</span>${esc(e.def.name)}</span>
+      <header><span class="nm"><span class="ord">${ord}</span>${esc(e.def.name)}</span>
         <span class="meta">${e.def.sets}×${range}</span></header>
       <div class="prev" style="margin:2px 0 8px">${esc(e.def.group)} · last: ${esc(pv)}</div>
       <div class="sets">
@@ -1045,8 +1150,21 @@ function renderTraining(){
         </div>`).join("")}
       </div>
       <div class="btnrow" style="margin-top:8px">
-        <button class="btn ghost sm" data-add-set="${ei}" type="button">+ set</button></div>
+        <button class="btn ghost sm" data-add-set="${ei}" type="button">+ set</button>
+        <button class="btn ghost sm" data-rm1="${ei}" type="button">1RM</button>
+        ${ei ? `<button class="btn ghost sm" data-ss="${ei}" type="button" aria-pressed="${!!e.ss}"
+          title="${e.ss ? "Break the superset with the exercise above"
+          : "Superset with the exercise above"}">${e.ss ? "unlink" : "superset"}</button>` : ""}
+      </div>
     </div>`;
+  };
+  document.getElementById("exList").innerHTML = groups.map((g,gi)=>{
+    const inner = g.map((ei,k)=> card(ei, ordLabel(gi,k,g.length))).join("");
+    if(g.length < 2) return inner;
+    // say so when this pairing is the session's own, not what the program prescribes
+    const own = g.some(ei=> !!draft.ex[ei].ss !== !!draft.ex[ei].def.ss);
+    return `<div class="ssgroup"><div class="sstag"><span>Superset · ${g.length} exercises</span>
+      ${own ? `<span class="only">this session only</span>` : ""}</div>${inner}</div>`;
   }).join("");
 
   document.getElementById("tCount").textContent = S.workouts.length + " sessions";
@@ -1057,6 +1175,148 @@ function renderTraining(){
       <td>${w.zone2 ? w.zone2+"′" : "–"}</td></tr>`;
   }).join("");
 }
+
+/* ---------- estimated 1RM ----------
+   Epley: 1RM = w · (1 + reps/30), which inverts to the load a target rep count
+   should take: w = 1RM / (1 + reps/30). It is fitted to low-rep work, so sets
+   past 12 reps are left out rather than turned into a number it cannot support. */
+const RM_CAP = 12;
+const e1rm = (kg, reps) => (kg > 0 && reps >= 1 && reps <= RM_CAP) ? kg * (1 + reps/30) : 0;
+const rmLoad = (rm1, reps) => rm1 / (1 + reps/30);
+const round25 = v => Math.round(v*4)/4;   // the smallest jump most gyms can actually make
+const rmKg = v => String(round25(v));     // 116.75, not a tidy 116.8 the plates cannot make
+const kgTxt = v => String(Math.round(v*100)/100);
+const RM_WINDOWS = {current:"in the last session with this exercise", lifetime:"in all logged history",
+  "3m":"in the last 3 months", "6m":"in the last 6 months"};
+let rm = {name:"", tab:"current"};
+
+// every qualifying set for one exercise, plus whatever is typed into the open session
+function rmHistory(name){
+  const out = [];
+  S.workouts.forEach(w=> w.exercises.forEach(e=>{ if(e.name !== name) return;
+    e.sets.forEach(s=>{ const v = e1rm(s.kg, s.reps);
+      if(v) out.push({date:w.date, kg:s.kg, reps:s.reps, rm:v}); }); }));
+  if(draft){
+    const today = document.getElementById("tDate").value || todayISO();
+    draft.ex.forEach(e=>{ if(e.def.name !== name) return;
+      e.sets.forEach(s=>{ const kg = parseFloat(s.kg), reps = parseInt(s.reps);
+        const v = e1rm(kg, reps);
+        if(v) out.push({date:today, kg, reps, rm:v}); }); });
+  }
+  return out.sort((a,b)=> a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+}
+// the best set in the window, since the top estimate is the one worth training off
+function rmBest(name, tab){
+  const all = rmHistory(name);
+  if(!all.length) return null;
+  let list = all;
+  if(tab === "current") list = all.filter(s=> s.date === all[all.length-1].date);
+  else if(tab !== "lifetime"){
+    const cut = Date.now() - (tab === "3m" ? 90 : 180)*86400000;
+    list = all.filter(s=> Date.parse(s.date) >= cut);
+  }
+  return list.length ? list.reduce((a,b)=> b.rm > a.rm ? b : a) : null;
+}
+function openRm(name, tab){
+  rm = {name, tab: tab || "current"};
+  document.getElementById("rmModal").classList.remove("hidden");
+  renderRm();
+  document.getElementById("rmOk").focus();
+}
+function closeRm(){ document.getElementById("rmModal").classList.add("hidden"); }
+function renderRm(){
+  if(document.getElementById("rmModal").classList.contains("hidden")) return;
+  document.querySelectorAll("#rmTabs .tab").forEach(b=>
+    b.setAttribute("aria-selected", String(b.dataset.rmtab === rm.tab)));
+  document.getElementById("rmTitle").textContent = "1RM · " + rm.name;
+  const best = rmBest(rm.name, rm.tab);
+  if(!best){
+    document.getElementById("rmBody").innerHTML =
+      `<p class="hint">No set ${esc(RM_WINDOWS[rm.tab])} to estimate from. Log reps and a load,
+       at ${RM_CAP} reps or fewer, and the estimate appears here.</p>`;
+  } else {
+    const rows = [];
+    for(let r=2; r<=11; r++) rows.push(`<tr${r===best.reps ? ' class="top"' : ""}>
+      <td>${rmKg(rmLoad(best.rm, r))} kg</td><td>${r}</td></tr>`);
+    document.getElementById("rmBody").innerHTML = `
+      <div class="rmbig">${rmKg(best.rm)} <span>kg estimated 1RM</span></div>
+      <div class="rmfrom">from ${kgTxt(best.kg)} kg × ${best.reps} on ${esc(fmtDate(best.date))}</div>
+      <table class="rmtable" style="margin-top:10px">
+        <thead><tr><th>Weight</th><th>Reps</th></tr></thead>
+        <tbody>${rows.join("")}</tbody></table>`;
+  }
+  document.getElementById("rmNote").textContent =
+    "Epley formula on the best set " + RM_WINDOWS[rm.tab]
+    + ". An estimate, not a tested max.";
+}
+document.getElementById("rmTabs").addEventListener("click", e=>{
+  const t = e.target.closest("[data-rmtab]");
+  if(t){ rm.tab = t.dataset.rmtab; renderRm(); }
+});
+["rmOk","rmClose"].forEach(id=> document.getElementById(id).addEventListener("click", closeRm));
+document.getElementById("rmModal").addEventListener("click", e=>{
+  if(e.target.id === "rmModal") closeRm();
+});
+document.addEventListener("keydown", e=>{ if(e.key === "Escape") closeRm(); });
+
+/* ---------- maxes: one estimate per exercise, by muscle group ----------
+   "Hamstrings/Glutes" and "Shoulders (rear delt)" train the same wall of the body
+   as "Hamstrings" and "Shoulders", so the label is cut back to its head to group by. */
+let mxTab = "lifetime";
+function mainGroup(g){
+  return String(g||"").split("/")[0].split("(")[0].trim() || "Unassigned";
+}
+// every exercise with a name in the log, in training order, program first
+function exerciseGroups(){
+  const idx = new Map();
+  S.program.forEach(d=> d.ex.forEach(x=>{ if(!idx.has(x.name)) idx.set(x.name, mainGroup(x.group)); }));
+  S.workouts.forEach(w=> w.exercises.forEach(e=>{ if(!idx.has(e.name)) idx.set(e.name, "Off the program"); }));
+  return idx;
+}
+function renderMaxes(){
+  document.querySelectorAll("#mxTabs .tab").forEach(b=>
+    b.setAttribute("aria-selected", String(b.dataset.mxtab === mxTab)));
+  document.getElementById("mxNote").textContent =
+    "Epley formula on the best set " + RM_WINDOWS[mxTab] + ". Estimates, not tested maxes.";
+
+  const groups = new Map();
+  exerciseGroups().forEach((g, name)=>{
+    const best = rmBest(name, mxTab);
+    if(!best) return;
+    if(!groups.has(g)) groups.set(g, []);
+    groups.get(g).push({name, best});
+  });
+  const total = [...groups.values()].reduce((n,l)=> n+l.length, 0);
+  document.getElementById("mxCount").textContent =
+    total ? total + " exercises · " + groups.size + " groups" : "nothing logged yet";
+  if(!total){
+    document.getElementById("mxList").innerHTML =
+      `<div class="card"><p class="hint">No set ${esc(RM_WINDOWS[mxTab])} carries an estimate.
+       Log reps and a load, at ${RM_CAP} reps or fewer, and every exercise shows up here.</p></div>`;
+    return;
+  }
+  document.getElementById("mxList").innerHTML = [...groups].map(([g,list])=>{
+    list.sort((a,b)=> b.best.rm - a.best.rm);
+    return `<div class="card">
+      <header><span class="lbl">${esc(g)}</span>
+        <span class="note">${list.length} exercise${list.length>1?"s":""}</span></header>
+      <div class="mxrows">${list.map(r=>`
+        <button class="mxrow" type="button" data-mx="${esc(r.name)}">
+          <span><span class="nm">${esc(r.name)}</span>
+            <span class="from">${kgTxt(r.best.kg)} kg × ${r.best.reps} · ${esc(fmtDate(r.best.date))}</span></span>
+          <span class="val">${rmKg(r.best.rm)} <i>kg</i></span>
+        </button>`).join("")}</div>
+    </div>`;
+  }).join("");
+}
+document.getElementById("mxTabs").addEventListener("click", e=>{
+  const t = e.target.closest("[data-mxtab]");
+  if(t){ mxTab = t.dataset.mxtab; renderMaxes(); }
+});
+document.getElementById("mxList").addEventListener("click", e=>{
+  const t = e.target.closest("[data-mx]");
+  if(t) openRm(t.dataset.mx, mxTab);
+});
 
 /* ---------- body comp ---------- */
 // index of the weigh-in nearest a given date, so sparse InBody points sit on the daily axis
@@ -1136,7 +1396,8 @@ function renderSetup(){
         <span class="lbl">Exercise</span><span class="lbl">Sets</span>
         <span class="lbl">Low</span><span class="lbl">High</span><span></span>
       </div>
-      ${d.ex.map((x,xi)=>`<div class="prow">
+      ${ssGroups(d.ex).map(g=>{
+        const rows = g.map(xi=>{ const x = d.ex[xi]; return `<div class="prow">
         <input class="nm" type="text" value="${esc(x.name)}" data-d="${di}" data-x="${xi}" data-xk="name" aria-label="Exercise name">
         <input class="num" type="number" value="${x.sets}" data-d="${di}" data-x="${xi}" data-xk="sets" aria-label="Sets">
         <input class="num" type="number" value="${x.lo}" data-d="${di}" data-x="${xi}" data-xk="lo" aria-label="Rep low">
@@ -1151,8 +1412,16 @@ function renderSetup(){
         <span class="moves">
           <button class="btn ghost sm" data-mv="${di}:${xi}:-1" type="button" aria-label="Move up">↑</button>
           <button class="btn ghost sm" data-mv="${di}:${xi}:1" type="button" aria-label="Move down">↓</button>
-        </span><span></span><span></span>
-      </div>`).join("")}
+        </span>
+        <span class="sslink">${xi ? `<button class="btn ghost sm" data-pss="${di}:${xi}" type="button"
+          aria-pressed="${!!x.ss}" title="${x.ss ? "Break the superset with the exercise above"
+          : "Superset with the exercise above"}">${x.ss ? "unlink" : "superset"}</button>` : ""}</span>
+      </div>`; }).join("");
+        return g.length > 1
+          ? `<div class="ssgroup"><div class="sstag"><span>Superset · ${g.length} exercises</span>
+             <span class="only">every new session</span></div>${rows}</div>`
+          : rows;
+      }).join("")}
       <div class="btnrow"><button class="btn ghost sm" data-add-ex="${di}" type="button">+ Exercise</button></div>
     </div>`).join("");
 
@@ -1170,12 +1439,12 @@ function renderSetup(){
 
 function renderAll(){
   sortAll(); renderOverview(); renderWeight(); renderNutrition();
-  renderTraining(); renderComp(); renderSetup();
+  renderTraining(); renderMaxes(); renderComp(); renderSetup();
   if(typeof renderSync === "function") renderSync();
 }
 
 /* ---------- navigation ---------- */
-const views = ["overview","weight","nutrition","training","comp","setup"];
+const views = ["overview","weight","nutrition","training","maxes","comp","setup"];
 document.querySelectorAll("nav button").forEach(b=>{
   b.addEventListener("click", ()=>{
     const v = b.dataset.view;
@@ -1285,14 +1554,26 @@ document.getElementById("exList").addEventListener("click", e=>{
   if(add){ draft.ex[+add.dataset.addSet].sets.push({reps:"",kg:"",rpe:""}); renderTraining(); return; }
   const rm = e.target.closest("[data-rm-set]");
   if(rm){ const [ei,si] = rm.dataset.rmSet.split(":").map(Number);
-    draft.ex[ei].sets.splice(si,1); renderTraining(); }
+    draft.ex[ei].sets.splice(si,1); renderTraining(); return; }
+  const rm1 = e.target.closest("[data-rm1]");
+  if(rm1){ openRm(draft.ex[+rm1.dataset.rm1].def.name); return; }
+  // pairing changed here rides on the session only; the program keeps its own
+  const ss = e.target.closest("[data-ss]");
+  if(ss){ const ei = +ss.dataset.ss, x = draft.ex[ei];
+    x.ss = !x.ss; renderTraining();
+    toast(x.ss ? "Superset for this session" : "Superset broken for this session"); }
 });
 document.getElementById("tSave").addEventListener("click", ()=>{
   const date = document.getElementById("tDate").value, day = document.getElementById("tDay").value;
-  const exercises = draft.ex.map(e=>({name:e.def.name,
-      sets:e.sets.map(s=>({reps:parseInt(s.reps)||0, kg:parseFloat(s.kg)||0, rpe:parseFloat(s.rpe)||0}))
-        .filter(s=>s.reps > 0)}))
-    .filter(e=>e.sets.length);
+  // an exercise dropped for having no sets takes its pairing with it, and whoever
+  // is left at the top of the list has nothing above it to be supersetted with
+  const exercises = ssNormalize(draft.ex.map(e=>{
+      const rec = {name:e.def.name,
+        sets:e.sets.map(s=>({reps:parseInt(s.reps)||0, kg:parseFloat(s.kg)||0, rpe:parseFloat(s.rpe)||0}))
+          .filter(s=>s.reps > 0)};
+      if(e.ss) rec.ss = true;
+      return rec;
+    }).filter(e=>e.sets.length));
   if(!exercises.length){ toast("Log at least one set"); return; }
   const z2 = parseInt(document.getElementById("tZone2").value) || 0;
   S.workouts = S.workouts.filter(w=>!(w.date===date && w.day===day));
@@ -1353,12 +1634,21 @@ document.getElementById("progEdit").addEventListener("click", e=>{
     save(); renderSetup(); return; }
   const rmEx = e.target.closest("[data-rm-ex]");
   if(rmEx){ const [di,xi] = rmEx.dataset.rmEx.split(":").map(Number);
-    S.program[di].ex.splice(xi,1); save(); renderSetup(); return; }
+    S.program[di].ex.splice(xi,1); ssNormalize(S.program[di].ex);
+    save(); renderSetup(); return; }
   const mv = e.target.closest("[data-mv]");
   if(mv){ const [di,xi,dir] = mv.dataset.mv.split(":").map(Number);
     const arr = S.program[di].ex, to = xi+dir;
     if(to >= 0 && to < arr.length){ const [it] = arr.splice(xi,1); arr.splice(to,0,it); }
-    save(); renderSetup(); return; }
+    ssNormalize(arr); save(); renderSetup(); return; }
+  // pairing set here is program-level: it seeds every session logged from now on.
+  // A session already open keeps whatever it has; the change lands on the next one.
+  const pss = e.target.closest("[data-pss]");
+  if(pss){ const [di,xi] = pss.dataset.pss.split(":").map(Number);
+    const x = S.program[di].ex[xi];
+    if(x.ss) delete x.ss; else x.ss = true;
+    save(); renderSetup();
+    toast(x.ss ? "Superset saved to the program" : "Superset removed from the program"); return; }
   const rmDay = e.target.closest("[data-rm-day]");
   if(rmDay){
     if(S.program.length <= 1){ toast("Keep at least one session"); return; }
@@ -1375,7 +1665,7 @@ document.getElementById("pSave").addEventListener("click", ()=>{
   const ids = S.program.map(d=>d.id.trim());
   if(ids.some(x=>!x)){ toast("Every session needs a code"); return; }
   if(new Set(ids).size !== ids.length){ toast("Session codes must be unique"); return; }
-  S.program.forEach(d=>{ d.id = d.id.trim();
+  S.program.forEach(d=>{ d.id = d.id.trim(); ssNormalize(d.ex);
     d.ex.forEach(x=>{ if(x.hi < x.lo) x.hi = x.lo; x.sets = Math.max(1, Math.round(x.sets)); }); });
   draft = null;
   S.meta = Object.assign({}, S.meta, {configAt: Date.now()});
@@ -1794,10 +2084,12 @@ function exportTables(){
     ["date","weight_kg","rolling_7d_avg","bf_pct","muscle_pct"],
     S.weighins.map((d,i)=>[d.date, d.kg, avg[i].toFixed(2), d.bf ?? "", d.mm ?? ""]))});
   const sets = [];
-  S.workouts.forEach(w=> w.exercises.forEach(e=> e.sets.forEach((s,i)=>
-    sets.push([w.date, w.day, e.name, i+1, s.reps, s.kg, s.rpe]))));
+  S.workouts.forEach(w=> ssGroups(w.exercises).forEach((g,gi)=> g.forEach((xi,k)=>{
+    const e = w.exercises[xi], ord = ordLabel(gi, k, g.length);
+    e.sets.forEach((s,i)=> sets.push([w.date, w.day, ord, e.name, i+1, s.reps, s.kg, s.rpe]));
+  })));
   t.push({name:"training.csv", text: csv(
-    ["date","session","exercise","set_number","reps","load_kg","rpe"], sets)});
+    ["date","session","position","exercise","set_number","reps","load_kg","rpe"], sets)});
   t.push({name:"nutrition.csv", text: csv(
     ["date","kcal","protein_g","carbs_g","fat_g"],
     S.nutrition.map(d=>[d.date, d.kcal, d.protein_g, d.carb_g, d.fat_g]))});
