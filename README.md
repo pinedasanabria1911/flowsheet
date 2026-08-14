@@ -13,6 +13,29 @@ Nothing is fetched from a CDN. That is deliberate: there is no lockfile to rot, 
 to update, and no service that can sleep, expire, or change its free tier. Editing the file
 and pushing is the entire deployment process.
 
+## Building
+
+`index.html` at the repo root is **generated**. Do not edit it by hand; edit `src/app.html`
+and rebuild.
+
+```bash
+node src/build.js     # writes index.html and manifest.json at the repo root
+node src/mkicon.js    # regenerates the PNG icons, only needed if the icon changes
+node src/test.js      # parses the built page and exercises the Cal AI text parser
+```
+
+| File | Role |
+|---|---|
+| `src/app.html` | the real source: markup, styles and logic, with a `// <<<SEED>>>` marker |
+| `src/build.js` | emits the production page, and a demo copy to `src/dist/demo.html` |
+| `src/seed.demo.js` | synthetic dataset used by the demo build only |
+| `src/seed.base.js` | raw generated series that `gen.js` reshapes |
+| `src/gen.js` | regenerates `seed.demo.js` against the current program |
+| `src/mkicon.js` | draws the home-screen icons as PNGs, no image library |
+| `src/test.js` | syntax check plus parser cases |
+
+Node is the only requirement, and only to build. The page itself has no dependencies.
+
 ## Where the data lives
 
 The app ships with a program and a goal but no measurements. Everything you log is stored

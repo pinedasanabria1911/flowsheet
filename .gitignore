@@ -1,0 +1,2 @@
+# Build scratch: the demo copy carrying synthetic data, rebuilt on demand
+src/dist/
